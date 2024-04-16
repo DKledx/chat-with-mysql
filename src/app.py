@@ -11,12 +11,27 @@ from langchain_openai import ChatOpenAI
 
 
 
+# =======================================================================================================
 
 def init_database(user: str, password: str, host: str, port: str, database: str) -> SQLDatabase:
+    """"
+    Initialize a SQLDatabase object with the given credentials
+    """
     db_uri = f"mysql+mysqlconnector://{user}:{password}@{host}:{port}/{database}"
     return SQLDatabase.from_uri(db_uri)
 
 def get_sql_chain(db):
+    """
+    Returns a SQL chain for interacting with a user who is asking questions about a company's database.
+
+    Args:
+        db: An instance of the database connection.
+
+    Returns:
+        A SQL chain for answering user's questions based on the conversation history and table schema.
+
+    """
+
     template = """
     You are a data analyst at a company. You are interacting with a user who is asking you questions about the company's database.
     Based on the table schema below, write a SQL query that would answer the user's question. Take the conversation history into account.
@@ -39,18 +54,21 @@ def get_sql_chain(db):
     SQL Query:
     """
 
-    prompt = ChatPromptTemplate.from_template(template)
+    prompt = ChatPromptTemplate.from_template(template) # Create a prompt template
 
     llm = ChatOpenAI(model="gpt-4-0125-preview")
                            
     def get_schema(_):
         return db.get_table_info()
     return (
-        RunnablePassthrough.assign(schema=get_schema)
+        RunnablePassthrough.assign(schema=get_schema) 
         | prompt
         | llm
         | StrOutputParser()
     )
+
+
+
 
 def get_response(user_query: str, db: SQLDatabase, chat_history: list):
     sql_chain = get_sql_chain(db)
