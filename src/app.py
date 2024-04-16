@@ -1,12 +1,16 @@
+# Standard library imports
 from dotenv import load_dotenv
+
+# Related third party imports
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_community.utilities import SQLDatabase
+
 import streamlit as st
 
 from langchain_core.prompts import ChatPromptTemplate
-
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
+
 from langchain_openai import ChatOpenAI
 
 
@@ -14,15 +18,16 @@ from langchain_openai import ChatOpenAI
 # =======================================================================================================
 
 def init_database(user: str, password: str, host: str, port: str, database: str) -> SQLDatabase:
-    """"
+    """
     Initialize a SQLDatabase object with the given credentials
     """
     db_uri = f"mysql+mysqlconnector://{user}:{password}@{host}:{port}/{database}"
     return SQLDatabase.from_uri(db_uri)
 
+
 def get_sql_chain(db):
     """
-    Returns a SQL chain for interacting with a user who is asking questions about a company's database.
+    Returns a proper SQL query for interacting with a user who is asking questions about a company's database.
 
     Args:
         db: An instance of the database connection.
@@ -31,7 +36,7 @@ def get_sql_chain(db):
         A SQL chain for answering user's questions based on the conversation history and table schema.
 
     """
-
+    
     template = """
     You are a data analyst at a company. You are interacting with a user who is asking you questions about the company's database.
     Based on the table schema below, write a SQL query that would answer the user's question. Take the conversation history into account.
@@ -64,14 +69,24 @@ def get_sql_chain(db):
         RunnablePassthrough.assign(schema=get_schema) 
         | prompt
         | llm
-        | StrOutputParser()
+        | StrOutputParser() 
     )
 
 
-
-
 def get_response(user_query: str, db: SQLDatabase, chat_history: list):
-    sql_chain = get_sql_chain(db)
+    """
+    Returns a natural language response to a user's question based on the conversation history and table schema.
+
+    Parameters:
+    - user_query (str): The user's question.
+    - db (SQLDatabase): The database object containing the table schema and query execution methods.
+    - chat_history (list): The conversation history.
+
+    Returns:
+    - str: The natural language response to the user's question.
+    """
+
+    sql_chain = get_sql_chain(db) 
 
     template = """
         You are a data analyst at a company. You are interacting with a user who is asking you questions about the company's database.
@@ -102,7 +117,6 @@ def get_response(user_query: str, db: SQLDatabase, chat_history: list):
         "question": user_query,
         "chat_history": chat_history,
     })
-
 
 
 #=======================================================================================================
