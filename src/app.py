@@ -13,6 +13,8 @@ from langchain_core.runnables import RunnablePassthrough
 
 from langchain_openai import ChatOpenAI
 
+from langchain_groq import ChatGroq
+
 
 
 # =======================================================================================================
@@ -36,7 +38,7 @@ def get_sql_chain(db):
         A SQL chain for answering user's questions based on the conversation history and table schema.
 
     """
-    
+
     template = """
     You are a data analyst at a company. You are interacting with a user who is asking you questions about the company's database.
     Based on the table schema below, write a SQL query that would answer the user's question. Take the conversation history into account.
@@ -61,7 +63,8 @@ def get_sql_chain(db):
 
     prompt = ChatPromptTemplate.from_template(template) # Create a prompt template
 
-    llm = ChatOpenAI(model="gpt-4-0125-preview")
+    llm = ChatOpenAI(model="gpt-4-0125-preview") 
+    # llm = ChatGroq()
                            
     def get_schema(_):
         return db.get_table_info()
@@ -101,7 +104,8 @@ def get_response(user_query: str, db: SQLDatabase, chat_history: list):
     """
     prompt = ChatPromptTemplate.from_template(template)
 
-    llm = ChatOpenAI(model="gpt-4-0125-preview")
+    llm = ChatOpenAI(model="gpt-4-0125-preview") 
+    # llm = ChatGroq() 
 
     chain = (
         RunnablePassthrough.assign(query=sql_chain).assign(
